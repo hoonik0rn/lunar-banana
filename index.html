@@ -139,27 +139,107 @@
     }
     @media (max-width: 900px) {
       .container {
-        padding: 16px 4px 12px 4px;
+        margin: 20px auto;
+        padding: 16px 12px;
       }
       .fieldset-flex {
-        gap: 18px 0;
-      }
-      .form-group {
-        min-width: 160px;
-        max-width: 100%;
-      }
-    }
-    @media (max-width: 600px) {
-      .fieldset-flex {
-        flex-direction: column;
-        gap: 0;
+        gap: 16px 0;
       }
       .form-group {
         min-width: 100%;
         max-width: 100%;
       }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 24px;
+      }
+      .intro {
+        font-size: 0.95rem;
+        padding: 12px;
+      }
+      legend {
+        font-size: 1rem;
+      }
+      input[type="number"] {
+        padding: 10px;
+        font-size: 0.95rem;
+      }
+      button {
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 1rem;
+      }
+      .results {
+        font-size: 0.95rem;
+        padding: 16px;
+      }
+      .results div {
+        padding: 10px 12px;
+      }
+      .chart-container {
+        margin-top: 24px;
+        padding: 16px;
+      }
+      .valeur-residuelle {
+        margin-top: 24px;
+      }
+      .valeur-residuelle h2 {
+        font-size: 1.1rem;
+      }
+      .valeur-residuelle table {
+        font-size: 0.85rem;
+      }
+      .valeur-residuelle th,
+      .valeur-residuelle td {
+        padding: 8px 4px;
+      }
+      .tooltip .tooltiptext {
+        width: 180px;
+        font-size: 0.85em;
+      }
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 12px auto;
+        padding: 12px 8px;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+      }
       fieldset {
-        padding: 14px 4px 6px 4px;
+        padding: 12px 8px 8px 8px;
+      }
+      .form-group {
+        margin-bottom: 12px;
+      }
+      label {
+        font-size: 0.9rem;
+      }
+      input[type="number"] {
+        padding: 8px;
+        font-size: 0.9rem;
+      }
+      .results {
+        font-size: 0.9rem;
+        padding: 12px;
+      }
+      .results div {
+        padding: 8px 10px;
+      }
+      .chart-container {
+        padding: 12px;
+      }
+      .valeur-residuelle table {
+        font-size: 0.8rem;
+      }
+      .valeur-residuelle th,
+      .valeur-residuelle td {
+        padding: 6px 3px;
+      }
+      .tooltip .tooltiptext {
+        width: 160px;
+        font-size: 0.8em;
       }
     }
     .tooltip {
