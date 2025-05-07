@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulateur de rentabilité VE</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+      margin: 0;
+      padding: 0;
+      color: #222;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 32px 24px 24px 24px;
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 2rem;
+      color: #5ABC00;
+      font-weight: 700;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    fieldset {
+      background: #f7f9fa;
+      border: 1.5px solid #e0e4ea;
+      border-radius: 12px;
+      padding: 24px 18px 12px 18px;
+      margin-bottom: 0;
+    }
+    legend {
+      font-weight: 700;
+      color: #5ABC00;
+      margin-bottom: 12px;
+      font-size: 1.08rem;
+      letter-spacing: 0.5px;
+    }
+    .fieldset-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px 32px;
+      justify-content: flex-start;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 260px;
+      min-width: 220px;
+      max-width: 320px;
+      margin-bottom: 18px;
+    }
+    label {
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #444;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    input[type="number"] {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #fff;
+      transition: all 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input[type="number"]:focus {
+      border-color: #1976d2;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    }
+    button {
+      margin: 0 auto;
+      display: block;
+      background: #5ABC00;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 36px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(90, 188, 0, 0.2);
+    }
+    button:hover {
+      background: #6ed100;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(90, 188, 0, 0.3);
+    }
+    .results {
+      margin-top: 32px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      padding: 24px;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .results div {
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      transition: transform 0.2s ease;
+    }
+    .results div:hover {
+      transform: translateX(4px);
+    }
+    .results strong {
+      color: #1976d2;
+      font-weight: 600;
+    }
+    .chart-container {
+      margin-top: 40px;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+    @media (max-width: 900px) {
+      .container {
+        padding: 16px 4px 12px 4px;
+      }
+      .fieldset-flex {
+        gap: 18px 0;
+      }
+      .form-group {
+        min-width: 160px;
+        max-width: 100%;
+      }
+    }
+    @media (max-width: 600px) {
+      .fieldset-flex {
+        flex-direction: column;
+        gap: 0;
+      }
+      .form-group {
+        min-width: 100%;
+        max-width: 100%;
+      }
+      fieldset {
+        padding: 14px 4px 6px 4px;
+      }
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      color: #1976d2;
+      font-size: 1em;
+      margin-left: 4px;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 220px;
+      background-color: #222;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 10;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 0.95em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="password-overlay" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.98);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,0.10);padding:24px 18px;max-width:260px;width:92%;text-align:center;display:flex;flex-direction:column;align-items:center;">
+      <h2 style="color:#1976d2;margin-bottom:18px;font-size:1.1rem;">Donne le code secret ultra secret méga secret</h2>
+      <input id="password-input" type="password" placeholder="Mot de passe" style="padding:8px 12px;border-radius:6px;border:1.5px solid #cfd8dc;width:100%;margin-bottom:14px;font-size:1em;">
+      <button onclick="checkPassword()" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 22px;font-size:1em;cursor:pointer;">Entrer</button>
+      <div id="password-error" style="color:#e53935;margin-top:10px;display:none;font-size:0.98em;">Mot de passe incorrect</div>
+    </div>
+  </div>
+  <div class="container">
+    <h1>Simulateur de rentabilité VE</h1>
+    <div class="intro" style="margin-bottom:24px; background: #e3f2fd; border-radius: 8px; padding: 16px; font-size:1.05rem;">
+      <strong>Parti pris :</strong><br>
+      La durée de détention pour l'étude est conseillée entre 3 et 5 ans.<br>
+      Le véhicule est acheté mais la batterie peut être louée.<br>
+      Un contrat d'entretien est souscrit pour le VE ce qui permet de sécuriser le coût complet d'usage du VE.
+    </div>
+    <form id="simu-form" style="display:flex; flex-direction:column; gap:24px;">
+      <fieldset>
+        <legend>1. Vos usages annuels</legend>
+        <div class="fieldset-flex">
+          <div class="form-group">
+            <label for="kmPro">Distance domicile-travail (km)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Distance aller simple entre votre domicile et votre lieu de travail.</span></span>
+            </label>
+            <input type="number" id="kmPro" min="0" step="1" value="15" required>
+          </div>
+          <div class="form-group">
+            <label for="nbTrajetsPro">Allers-retours travail/jour
+              <span class="tooltip">ⓘ<span class="tooltiptext">Nombre d'allers-retours domicile-travail effectués chaque jour travaillé.</span></span>
+            </label>
+            <input type="number" id="nbTrajetsPro" min="0" step="1" value="2" required>
+          </div>
+          <div class="form-group">
+            <label for="nbJoursTravail">Jours travaillés/an
+              <span class="tooltip">ⓘ<span class="tooltiptext">Nombre de jours où vous vous rendez au travail dans l'année.</span></span>
+            </label>
+            <input type="number" id="nbJoursTravail" min="0" step="1" value="210" required>
+          </div>
+          <div class="form-group">
+            <label for="kmWeekend">Km le week-end
+              <span class="tooltip">ⓘ<span class="tooltiptext">Nombre de kilomètres parcourus chaque week-end (hors vacances).</span></span>
+            </label>
+            <input type="number" id="kmWeekend" min="0" step="1" value="30" required>
+          </div>
+          <div class="form-group">
+            <label for="autresKm">Autres petits trajets/semaine
+              <span class="tooltip">ⓘ<span class="tooltiptext">Kilomètres hebdomadaires pour les courses, loisirs, etc.</span></span>
+            </label>
+            <input type="number" id="autresKm" min="0" step="1" value="15" required>
+          </div>
+          <div class="form-group">
+            <label for="nbConges">Semaines de congés/an
+              <span class="tooltip">ⓘ<span class="tooltiptext">Semaines où vous ne faites pas vos trajets habituels (vacances, etc.).</span></span>
+            </label>
+            <input type="number" id="nbConges" min="0" step="1" value="5" required>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>2. Votre véhicule thermique</legend>
+        <div class="fieldset-flex">
+          <div class="form-group">
+            <label for="coutAchatVT">Prix d'achat (€)</label>
+            <input type="number" id="coutAchatVT" min="0" step="100" value="15000" required>
+          </div>
+          <div class="form-group">
+            <label for="bonusVT">Bonus/malus écologique (€)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Aide ou taxe à l'achat selon le type de véhicule thermique.</span></span>
+            </label>
+            <input type="number" id="bonusVT" min="0" step="100" value="0" required>
+          </div>
+          <div class="form-group">
+            <label for="carteGriseVT">Carte grise (€)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Coût du certificat d'immatriculation pour le véhicule thermique.</span></span>
+            </label>
+            <input type="number" id="carteGriseVT" min="0" step="10" value="300" required>
+          </div>
+          <div class="form-group">
+            <label for="consoThermique">Conso moyenne (L/100km)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Consommation moyenne de carburant de votre véhicule thermique.</span></span>
+            </label>
+            <input type="number" id="consoThermique" min="0" step="0.1" value="6.5" required>
+          </div>
+          <div class="form-group">
+            <label for="assuranceVT">Assurance annuelle (€)</label>
+            <input type="number" id="assuranceVT" min="0" step="10" value="400" required>
+          </div>
+          <div class="form-group">
+            <label for="entretienVT">Entretien annuel (€)</label>
+            <input type="number" id="entretienVT" min="0" step="10" value="400" required>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>3. Votre véhicule électrique</legend>
+        <div class="fieldset-flex">
+          <div class="form-group">
+            <label for="coutAchatVE">Prix d'achat (€)</label>
+            <input type="number" id="coutAchatVE" min="0" step="100" value="21000" required>
+          </div>
+          <div class="form-group">
+            <label for="bonusVE">Bonus écologique (€)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Aide à l'achat d'un véhicule électrique (bonus écologique).</span></span>
+            </label>
+            <input type="number" id="bonusVE" min="0" step="100" value="7000" required>
+          </div>
+          <div class="form-group">
+            <label for="carteGriseVE">Carte grise (€)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Coût du certificat d'immatriculation pour le véhicule électrique.</span></span>
+            </label>
+            <input type="number" id="carteGriseVE" min="0" step="10" value="0" required>
+          </div>
+          <div class="form-group">
+            <label for="consoVE">Conso moyenne (kWh/100km)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Consommation moyenne d'électricité de votre véhicule électrique.</span></span>
+            </label>
+            <input type="number" id="consoVE" min="0" step="0.1" value="15" required>
+          </div>
+          <div class="form-group">
+            <label for="assuranceVE">Assurance annuelle (€)</label>
+            <input type="number" id="assuranceVE" min="0" step="10" value="370" required>
+          </div>
+          <div class="form-group">
+            <label for="entretienVE">Entretien annuel (€)</label>
+            <input type="number" id="entretienVE" min="0" step="10" value="200" required>
+          </div>
+          <div class="form-group">
+            <label for="borneRecharge">Borne recharge domicile (€)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Coût d'installation d'une borne de recharge à domicile (si concerné).</span></span>
+            </label>
+            <input type="number" id="borneRecharge" min="0" step="100" value="1000" required>
+          </div>
+          <div class="form-group">
+            <label for="locationBatterie">Location batterie (€ / mois)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Coût mensuel si la batterie de votre VE est louée (sinon mettre 0).</span></span>
+            </label>
+            <input type="number" id="locationBatterie" min="0" step="1" value="80" required>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>4. Données énergie</legend>
+        <div class="fieldset-flex">
+          <div class="form-group">
+            <label for="prixKWh">Prix de l'électricité (€ / kWh)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Prix moyen du kWh d'électricité pour la recharge du VE.</span></span>
+            </label>
+            <input type="number" id="prixKWh" min="0" step="0.01" value="0.20" required>
+          </div>
+          <div class="form-group">
+            <label for="prixCarburant">Prix du carburant (€ / L)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Prix moyen du litre de carburant utilisé par le VT.</span></span>
+            </label>
+            <input type="number" id="prixCarburant" min="0" step="0.01" value="1.80" required>
+          </div>
+          <div class="form-group">
+            <label for="duree">Durée de détention (années)
+              <span class="tooltip">ⓘ<span class="tooltiptext">Nombre d'années pendant lesquelles vous garderez le véhicule.</span></span>
+            </label>
+            <input type="number" id="duree" min="1" max="20" step="1" value="5" required>
+          </div>
+        </div>
+      </fieldset>
+      <div style="display:flex; justify-content:center; margin-top:24px;">
+        <button type="submit">Simuler</button>
+      </div>
+    </form>
+    <div class="results" id="results" style="display:none;"></div>
+    <div class="chart-container">
+      <canvas id="costChart" height="120"></canvas>
+    </div>
+    <div class="valeur-residuelle" style="margin-top:32px;">
+      <h2 style="font-size:1.2rem; color:#1976d2; margin-bottom:12px;">Valeur résiduelle du véhicule (informative)</h2>
+      <table style="width:100%; border-collapse:collapse; background:#f8f9fa; border-radius:8px; overflow:hidden;">
+        <thead>
+          <tr style="background:#fffbe6;">
+            <th>Âge</th>
+            <th>Prix</th>
+            <th>% VT</th>
+            <th>% VE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>16550</td><td>100 %</td><td>100 %</td></tr>
+          <tr><td>2</td><td>11600</td><td>70 %</td><td>80 %</td></tr>
+          <tr><td>3</td><td>9050</td><td>55 %</td><td>60 %</td></tr>
+          <tr><td>4</td><td>6300</td><td>38 %</td><td>43 %</td></tr>
+          <tr><td>5</td><td>5400</td><td>33 %</td><td>35 %</td></tr>
+          <tr><td>6</td><td>4120</td><td>25 %</td><td>30 %</td></tr>
+          <tr><td>7</td><td>3630</td><td>22 %</td><td>25 %</td></tr>
+          <tr><td>8</td><td>2890</td><td>17 %</td><td>22 %</td></tr>
+          <tr><td>9</td><td>2500</td><td>15 %</td><td>20 %</td></tr>
+          <tr><td>10</td><td>1700</td><td>10 %</td><td>18 %</td></tr>
+          <tr><td>11</td><td>1500</td><td>9 %</td><td>15 %</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.95rem; color:#666; margin-top:8px;">La modification de ces données n'est pas nécessaire en première approche.<br>Modification possible pour ceux qui souhaiteraient aller plus loin dans l'analyse.</div>
+    </div>
+  </div>
+  <script>
+    // Tableaux de valeur résiduelle (année => %)
+    const valeurResiduelleVT = [1,0.7,0.55,0.38,0.33,0.25,0.22,0.17,0.15,0.10,0.09];
+    const valeurResiduelleVE = [1,0.8,0.6,0.43,0.35,0.3,0.25,0.22,0.2,0.18,0.15];
+
+    const form = document.getElementById('simu-form');
+    const resultsDiv = document.getElementById('results');
+    const ctx = document.getElementById('costChart').getContext('2d');
+    let chart;
+
+    function getKmAnnuel({kmPro, nbTrajetsPro, nbJoursTravail, kmWeekend, autresKm, nbConges}) {
+      const kmProTotal = kmPro * nbTrajetsPro * nbJoursTravail;
+      const nbSemaines = 52;
+      const kmWeekendTotal = kmWeekend * (nbSemaines - nbConges);
+      const kmAutres = autresKm * nbSemaines;
+      return kmProTotal + kmWeekendTotal + kmAutres;
+    }
+
+    function getValeurResiduelle(prixAchat, duree, type) {
+      // type: 'VT' ou 'VE'
+      const tableau = type === 'VT' ? valeurResiduelleVT : valeurResiduelleVE;
+      const idx = Math.max(0, Math.min(duree-1, tableau.length-1));
+      return prixAchat * tableau[idx];
+    }
+
+    function calculer(data) {
+      // 1. Km annuel
+      const kmAnnuel = getKmAnnuel(data);
+      // 2. Coûts annuels
+      const coutCarburantVT = (data.consoThermique / 100) * kmAnnuel * data.prixCarburant;
+      const coutElecVE = (data.consoVE / 100) * kmAnnuel * data.prixKWh;
+      const coutEntretienVT = data.entretienVT;
+      const coutEntretienVE = data.entretienVE;
+      const coutAssuranceVT = data.assuranceVT;
+      const coutAssuranceVE = data.assuranceVE;
+      const coutLocationBatterie = data.locationBatterie * 12;
+      // 3. Investissement initial
+      const investissementVT = data.coutAchatVT + data.carteGriseVT - data.bonusVT;
+      const investissementVE = data.coutAchatVE + data.carteGriseVE + data.borneRecharge - data.bonusVE;
+      // 4. Valeur résiduelle
+      const valeurResiduelleVTcalc = getValeurResiduelle(data.coutAchatVT, data.duree, 'VT');
+      const valeurResiduelleVEcalc = getValeurResiduelle(data.coutAchatVE, data.duree, 'VE');
+      // 5. Coût total de détention
+      const totalVT = investissementVT + (coutCarburantVT + coutEntretienVT + coutAssuranceVT) * data.duree - valeurResiduelleVTcalc;
+      const totalVE = investissementVE + (coutElecVE + coutEntretienVE + coutAssuranceVE + coutLocationBatterie) * data.duree - valeurResiduelleVEcalc;
+      // 6. Coût au km
+      const kmTotal = kmAnnuel * data.duree;
+      const coutKmVT = totalVT / kmTotal;
+      const coutKmVE = totalVE / kmTotal;
+      // 7. Économie
+      const economie = totalVT - totalVE;
+      return {
+        kmAnnuel, kmTotal,
+        coutCarburantVT, coutElecVE,
+        coutEntretienVT, coutEntretienVE,
+        coutAssuranceVT, coutAssuranceVE,
+        coutLocationBatterie,
+        investissementVT, investissementVE,
+        valeurResiduelleVTcalc, valeurResiduelleVEcalc,
+        totalVT, totalVE,
+        coutKmVT, coutKmVE,
+        economie
+      };
+    }
+
+    function afficherResultats(res) {
+      resultsDiv.style.display = 'block';
+      resultsDiv.innerHTML = `
+        <div>Kilométrage annuel estimé : <strong>${res.kmAnnuel.toLocaleString('fr-FR')} km</strong></div>
+        <div>Coût total <strong>Thermique</strong> : <strong>${res.totalVT.toLocaleString('fr-FR', {style:'currency', currency:'EUR'})}</strong> (${res.coutKmVT.toLocaleString('fr-FR', {minimumFractionDigits:3, maximumFractionDigits:3})} €/km)</div>
+        <div>Coût total <strong>Électrique</strong> : <strong>${res.totalVE.toLocaleString('fr-FR', {style:'currency', currency:'EUR'})}</strong> (${res.coutKmVE.toLocaleString('fr-FR', {minimumFractionDigits:3, maximumFractionDigits:3})} €/km)</div>
+        <div>Économie sur la période : <strong style="color:green;">${res.economie.toLocaleString('fr-FR', {style:'currency', currency:'EUR'})}</strong></div>
+        <div>Valeur résiduelle VT : <strong>${res.valeurResiduelleVTcalc.toLocaleString('fr-FR', {style:'currency', currency:'EUR'})}</strong> | VE : <strong>${res.valeurResiduelleVEcalc.toLocaleString('fr-FR', {style:'currency', currency:'EUR'})}</strong></div>
+        <div style="margin-top:12px; font-weight:600; color:${res.economie > 0 ? '#5ABC00' : '#e53935'};">
+          ${res.economie > 0 ? "Vous êtes Electro-compatible. Vous pouvez sérieusement étudier l'acquisition d'un véhicule électrique !" : "Le véhicule électrique n'est pas encore rentable dans votre cas, mais la situation peut évoluer."}
+        </div>
+      `;
+    }
+
+    function afficherGraphique(res, duree) {
+      const labels = [];
+      const dataVE = [];
+      const dataVT = [];
+      let cumulVE = 0, cumulVT = 0;
+      for(let an=1; an<=duree; an++) {
+        labels.push(`Année ${an}`);
+        cumulVE = res.investissementVE + (res.coutElecVE + res.coutEntretienVE + res.coutAssuranceVE + res.coutLocationBatterie) * an - getValeurResiduelle(document.getElementById('coutAchatVE').valueAsNumber, an, 'VE');
+        cumulVT = res.investissementVT + (res.coutCarburantVT + res.coutEntretienVT + res.coutAssuranceVT) * an - getValeurResiduelle(document.getElementById('coutAchatVT').valueAsNumber, an, 'VT');
+        dataVE.push(cumulVE);
+        dataVT.push(cumulVT);
+      }
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Cumul VE',
+              data: dataVE,
+              borderColor: '#5ABC00',
+              backgroundColor: 'rgba(90, 188, 0, 0.08)',
+              fill: true,
+              tension: 0.2,
+              pointRadius: 3,
+            },
+            {
+              label: 'Cumul thermique',
+              data: dataVT,
+              borderColor: '#e53935',
+              backgroundColor: 'rgba(229, 57, 53, 0.08)',
+              fill: true,
+              tension: 0.2,
+              pointRadius: 3,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y.toLocaleString('fr-FR', {style:'currency', currency:'EUR'});
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString('fr-FR', {style:'currency', currency:'EUR'});
+                }
+              },
+              title: {
+                display: true,
+                text: 'Coût cumulé (€)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Années'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        consoVE: parseFloat(document.getElementById('consoVE').value),
+        consoThermique: parseFloat(document.getElementById('consoThermique').value),
+        prixKWh: parseFloat(document.getElementById('prixKWh').value),
+        prixCarburant: parseFloat(document.getElementById('prixCarburant').value),
+        duree: parseInt(document.getElementById('duree').value, 10),
+        kmPro: parseFloat(document.getElementById('kmPro').value),
+        nbTrajetsPro: parseInt(document.getElementById('nbTrajetsPro').value, 10),
+        nbJoursTravail: parseInt(document.getElementById('nbJoursTravail').value, 10),
+        kmWeekend: parseFloat(document.getElementById('kmWeekend').value),
+        autresKm: parseFloat(document.getElementById('autresKm').value),
+        nbConges: parseInt(document.getElementById('nbConges').value, 10),
+        coutAchatVT: parseFloat(document.getElementById('coutAchatVT').value),
+        bonusVT: parseFloat(document.getElementById('bonusVT').value),
+        carteGriseVT: parseFloat(document.getElementById('carteGriseVT').value),
+        coutAchatVE: parseFloat(document.getElementById('coutAchatVE').value),
+        bonusVE: parseFloat(document.getElementById('bonusVE').value),
+        carteGriseVE: parseFloat(document.getElementById('carteGriseVE').value),
+        borneRecharge: parseFloat(document.getElementById('borneRecharge').value),
+        assuranceVT: parseFloat(document.getElementById('assuranceVT').value),
+        assuranceVE: parseFloat(document.getElementById('assuranceVE').value),
+        entretienVT: parseFloat(document.getElementById('entretienVT').value),
+        entretienVE: parseFloat(document.getElementById('entretienVE').value),
+        locationBatterie: parseFloat(document.getElementById('locationBatterie').value)
+      };
+      const res = calculer(data);
+      afficherResultats(res);
+      afficherGraphique(res, data.duree);
+    });
+
+    // Initialisation avec valeurs par défaut
+    window.addEventListener('DOMContentLoaded', () => {
+      form.dispatchEvent(new Event('submit'));
+    });
+
+    function checkPassword() {
+      const input = document.getElementById('password-input').value;
+      if (input === 'cecileisamazing') {
+        document.getElementById('password-overlay').style.display = 'none';
+      } else {
+        document.getElementById('password-error').style.display = 'block';
+      }
+    }
+    document.getElementById('password-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkPassword();
+    });
+  </script>
+</body>
+</html>
